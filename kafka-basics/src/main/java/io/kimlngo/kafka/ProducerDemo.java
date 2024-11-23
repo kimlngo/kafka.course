@@ -15,7 +15,7 @@ public class ProducerDemo {
     private static final String TOPIC_NAME = "demo-java";
 
     public static void main(String[] args) {
-        log.info("Hello World");
+        log.info("Producer Demo");
 
         //create Producer properties
         Properties properties = new Properties();
