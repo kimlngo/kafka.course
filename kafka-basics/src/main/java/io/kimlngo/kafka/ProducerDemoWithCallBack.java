@@ -27,32 +27,41 @@ public class ProducerDemoWithCallBack {
         //config serializer
         properties.setProperty("key.serializer", StringSerializer.class.getName());
         properties.setProperty("value.serializer", StringSerializer.class.getName());
+        properties.setProperty("batch.size", "400");
 
         //create producer
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
-        IntStream.range(0, 30).forEach(i -> {
-            //create Producer Record
-            ProducerRecord<String, String> producerRecord = new ProducerRecord<>(TOPIC_NAME, "Message #" + (i + 1));
+        IntStream.range(0, 10).forEach(j -> {
+             IntStream.range(0, 30).forEach(i -> {
+                  //create Producer Record
+                  ProducerRecord<String, String> producerRecord = new ProducerRecord<>(TOPIC_NAME,
+                          String.format("Batch Message j=%d - i=%d", j + 1, i + 1));
 
-            //send data
-            producer.send(producerRecord, new Callback() {
-                @Override
-                public void onCompletion(RecordMetadata recordMetadata, Exception e) {
-                    if(e == null) {
-                        //success case
-                        log.info("Received new metadata:\n" +
-                                "Topic: " + recordMetadata.topic() + "\n" +
-                                "Partition: " + recordMetadata.partition() + "\n" +
-                                "Offset: " + recordMetadata.offset() + "\n" +
-                                "Timestamp: " + recordMetadata.timestamp() + "\n");
-                    } else {
-                        log.error("Error while sending data", e);
-                    }
-                }
-            });
-        });
+                  //send data
+                  producer.send(producerRecord, new Callback() {
+                      @Override
+                      public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                          if (e == null) {
+                              //success case
+                              log.info("Received new metadata:\n" +
+                                      "Topic: " + recordMetadata.topic() + "\n" +
+                                      "Partition: " + recordMetadata.partition() + "\n" +
+                                      "Offset: " + recordMetadata.offset() + "\n" +
+                                      "Timestamp: " + recordMetadata.timestamp() + "\n");
+                          } else {
+                              log.error("Error while sending data", e);
+                          }
+                      }
+                  });
+              });
 
+             try {
+                 Thread.sleep(1000);
+             } catch (InterruptedException e) {
+                 throw new RuntimeException(e);
+             }
+         });
         //flush and close the producer
         //tell producer to send all data and block until done - synchronous
         producer.flush();
