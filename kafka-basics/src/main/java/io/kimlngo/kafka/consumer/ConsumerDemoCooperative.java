@@ -3,6 +3,7 @@ package io.kimlngo.kafka.consumer;
 import io.kimlngo.kafka.config.Config;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.CooperativeStickyAssignor;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -13,8 +14,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Properties;
 
-public class ConsumerDemoWithShutdown {
-    private static final Logger log = LoggerFactory.getLogger(ConsumerDemoWithShutdown.class.getSimpleName());
+public class ConsumerDemoCooperative {
+    private static final Logger log = LoggerFactory.getLogger(ConsumerDemoCooperative.class.getSimpleName());
 
     public static void main(String[] args) {
         log.info("Consumer Demo");
@@ -29,6 +30,7 @@ public class ConsumerDemoWithShutdown {
         properties.setProperty("value.deserializer", StringDeserializer.class.getName());
         properties.setProperty("group.id", groupId);
         properties.setProperty("auto.offset.reset", "earliest"); //read --from-beginning | "latest" - read from latest
+        properties.setProperty("partition.assignment.strategy", CooperativeStickyAssignor.class.getName());
 
         //create consumer
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(properties);
