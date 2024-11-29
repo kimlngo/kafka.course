@@ -30,6 +30,7 @@ import java.util.Properties;
 public class OpenSearchConsumer {
     private static final Logger log = LoggerFactory.getLogger(OpenSearchConsumer.class.getSimpleName());
     private static final String INDEXES = "wikimedia";
+    private static final String GROUP_ID = "consumer-opensearch-demo";
 
     public static void main(String[] args) {
         //create OpenSearch client
@@ -75,8 +76,10 @@ public class OpenSearchConsumer {
                         log.info(response.getId());
                     } catch (Exception e) {
                     }
-
                 }
+
+                kafkaConsumer.commitSync();
+                log.info("Offset commited");
             }
         } catch (Exception e) {
 
@@ -94,7 +97,7 @@ public class OpenSearchConsumer {
     }
 
     private static KafkaConsumer<String, String> createKafkaConsumer() {
-        String groupId = "consumer-opensearch-demo";
+
 
         //create Producer properties
         Properties properties = new Properties();
@@ -103,8 +106,9 @@ public class OpenSearchConsumer {
         //config serializer
         properties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         properties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, GROUP_ID);
         properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         //create consumer
         return new KafkaConsumer<>(properties);
