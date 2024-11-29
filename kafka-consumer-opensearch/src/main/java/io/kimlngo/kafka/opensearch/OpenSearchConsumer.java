@@ -1,5 +1,6 @@
 package io.kimlngo.kafka.opensearch;
 
+import com.google.gson.JsonParser;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -21,7 +22,6 @@ import org.opensearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
@@ -61,8 +61,14 @@ public class OpenSearchConsumer {
                 log.info("Received " + recordCount + " record(s)");
 
                 for(var record : records) {
+                    //strategy 1: self-define an ID for idempotency
+//                    String id = String.format("%s_%d_%d", record.topic(), record.partition(), record.offset());
+
                     try {
-                        IndexRequest indexRequest = new IndexRequest(INDEXES).source(record.value(), XContentType.JSON);
+                        //strategy 2: extract id from record.value()/meta/id.
+                        String id = extractId(record.value());
+                        IndexRequest indexRequest = new IndexRequest(INDEXES).source(record.value(), XContentType.JSON)
+                                                                             .id(id);
 
                         IndexResponse response = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
 
@@ -75,6 +81,16 @@ public class OpenSearchConsumer {
         } catch (Exception e) {
 
         }
+    }
+
+    private static String extractId(String json) {
+        //using gson lib
+        return JsonParser.parseString(json)
+                         .getAsJsonObject()
+                         .get("meta")
+                         .getAsJsonObject()
+                         .get("id")
+                         .getAsString();
     }
 
     private static KafkaConsumer<String, String> createKafkaConsumer() {
